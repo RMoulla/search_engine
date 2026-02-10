@@ -38,6 +38,13 @@ function renderEmpty() {
   `;
 }
 
+function makeDiv(className, text) {
+  const node = document.createElement('div');
+  if (className) node.className = className;
+  node.textContent = text;
+  return node;
+}
+
 function renderResults(items, debugEnabled) {
   if (!items.length) {
     renderEmpty();
@@ -58,26 +65,35 @@ function renderResults(items, debugEnabled) {
 
     const content = document.createElement('div');
     content.className = 'card-content';
-    const debugRow = debugEnabled
-      ? `<div class="muted">Debug → TF-IDF: ${item.debug_scores.tfidf}, Fuzzy: ${item.debug_scores.fuzzy}, Bonus: ${item.debug_scores.bonus}, Final: ${item.debug_scores.final}</div>`
-      : '';
 
-    content.innerHTML = `
-      <strong>${item.title}</strong>
-      <div class="muted">${item.category} · ${item.brand}</div>
-      <div>${formatPrice(item.price)}</div>
-      <div class="muted">⭐ ${formatRating(item.rating)}</div>
-      <button type="button" class="details-btn">Voir détails</button>
-      <div class="why">Pourquoi ce résultat ? ${item.why}</div>
-      ${debugRow}
-    `;
+    const title = document.createElement('strong');
+    title.textContent = item.title || 'Produit sans titre';
 
-    content.querySelector('.details-btn').addEventListener('click', () => {
+    const meta = makeDiv('muted', `${item.category} · ${item.brand}`);
+    const price = makeDiv('', formatPrice(item.price));
+    const rating = makeDiv('muted', `⭐ ${formatRating(item.rating)}`);
+
+    const detailsBtn = document.createElement('button');
+    detailsBtn.type = 'button';
+    detailsBtn.className = 'details-btn';
+    detailsBtn.textContent = 'Voir détails';
+    detailsBtn.addEventListener('click', () => {
       openDetails(item.title, item.description);
     });
 
-    card.appendChild(image);
-    card.appendChild(content);
+    const why = makeDiv('why', `Pourquoi ce résultat ? ${item.why}`);
+
+    content.append(title, meta, price, rating, detailsBtn, why);
+
+    if (debugEnabled) {
+      const debug = makeDiv(
+        'muted',
+        `Debug → TF-IDF: ${item.debug_scores.tfidf}, Fuzzy: ${item.debug_scores.fuzzy}, Bonus: ${item.debug_scores.bonus}, Final: ${item.debug_scores.final}`,
+      );
+      content.appendChild(debug);
+    }
+
+    card.append(image, content);
     resultsEl.appendChild(card);
   });
 }
@@ -107,8 +123,14 @@ async function runSearch() {
   });
 
   if (!resp.ok) {
-    const errorPayload = await resp.json();
-    diagnosticsEl.textContent = `Erreur: ${errorPayload.error || 'inconnue'}`;
+    let message = 'inconnue';
+    try {
+      const errorPayload = await resp.json();
+      message = errorPayload.error || message;
+    } catch {
+      message = `HTTP ${resp.status}`;
+    }
+    diagnosticsEl.textContent = `Erreur: ${message}`;
     renderEmpty();
     return;
   }
