@@ -10,6 +10,23 @@ const closeModalBtn = document.getElementById('close-modal');
 const PLACEHOLDER_IMAGE =
   'https://placehold.co/640x420/f1f5f9/334155?text=Image+indisponible';
 
+
+function cleanupUnexpectedBodyText() {
+  const safeContainers = new Set([document.querySelector('main'), document.getElementById('details-modal')]);
+  Array.from(document.body.childNodes).forEach((node) => {
+    if (node.nodeType === Node.TEXT_NODE && node.textContent.trim()) {
+      node.remove();
+      return;
+    }
+    if (node.nodeType === Node.ELEMENT_NODE) {
+      const isScript = node.tagName === 'SCRIPT';
+      if (!isScript && !safeContainers.has(node)) {
+        node.remove();
+      }
+    }
+  });
+}
+
 function formatPrice(value) {
   if (value === null || value === undefined) return 'Prix non disponible';
   return new Intl.NumberFormat('fr-FR', {
@@ -140,6 +157,8 @@ async function runSearch() {
   diagnosticsEl.textContent = `Produits indexés: ${d.total_products} · build index: ${d.index_build_ms} ms · recherche: ${d.query_time_ms} ms`;
   renderResults(data.results, payload.debug);
 }
+
+cleanupUnexpectedBodyText();
 
 searchBtn?.addEventListener('click', runSearch);
 queryInput?.addEventListener('keydown', (evt) => {
