@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Moteur Produits Intelligent</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+  </head>
+  <body>
+    <main class="container">
+      <header>
+        <h1>🔎 Moteur de recherche produits</h1>
+        <p>Recherche lexicale intelligente (TF-IDF + fuzzy), sans embeddings.</p>
+      </header>
+
+      {% if error %}
+      <section class="error-box">
+        <h2>Erreur de chargement</h2>
+        <p>{{ error }}</p>
+      </section>
+      {% else %}
+      <section class="search-panel">
+        <div class="search-row">
+          <input id="query" type="text" placeholder="Ex: chaussures running pluie" />
+          <button id="search-btn">Rechercher</button>
+        </div>
+
+        <div class="filters">
+          <input id="min-price" type="number" min="0" step="0.01" placeholder="Prix min" />
+          <input id="max-price" type="number" min="0" step="0.01" placeholder="Prix max" />
+          <select id="category">
+            <option value="">Toutes catégories</option>
+            {% for category in categories %}
+            <option value="{{ category }}">{{ category }}</option>
+            {% endfor %}
+          </select>
+          <input id="min-rating" type="number" min="0" max="5" step="0.1" placeholder="Note min" />
+          <label class="debug-toggle"><input id="debug" type="checkbox" /> Debug scores</label>
+        </div>
+
+        <div class="example-queries">
+          {% for ex in examples %}
+          <button class="chip" data-q="{{ ex }}">{{ ex }}</button>
+          {% endfor %}
+        </div>
+      </section>
+
+      <section id="diagnostics" class="diagnostics"></section>
+      <section id="results" class="results-grid"></section>
+      {% endif %}
+    </main>
+
+    <dialog id="details-modal">
+      <article>
+        <h3 id="modal-title"></h3>
+        <p id="modal-description"></p>
+        <button id="close-modal">Fermer</button>
+      </article>
+    </dialog>
+
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+  </body>
+</html>
+tests/conftest.py
+tests/conftest.py
+Nouveau
++6
+-0
+
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
